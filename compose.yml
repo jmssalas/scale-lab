@@ -1,0 +1,17 @@
+services:
+    floci:
+        image: floci/floci:latest
+        ports:
+            - "4566:4566"
+        volumes:
+            # Local directory bind mount (default)
+            - ./floci-data:/app/data
+
+    floci-ui:
+        image: floci/floci-ui:latest
+        ports:
+            - "4500:4500"
+        environment:
+            FLOCI_ENDPOINT: http://floci:4566
+        depends_on:
+            - floci
