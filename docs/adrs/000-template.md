@@ -1,5 +1,5 @@
 ---
-Status: Proposed | Accepted | Superseded by ADR-XXX
+Status: Proposed | Accepted | Discarded
 Date: YYYY-MM-DD
 ---
 
