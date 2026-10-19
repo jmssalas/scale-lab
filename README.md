@@ -14,4 +14,4 @@ This project was created to analyze how a system's design evolves under load wit
 
 ## Architecture Decision Records
 
-- [001: Base Design & Architecture](docs/adrs/001-base-design-architecture.md)
+- [001: Start with a syncronous, naive baseline](docs/adrs/001-start-with-syncronous-baseline.md)

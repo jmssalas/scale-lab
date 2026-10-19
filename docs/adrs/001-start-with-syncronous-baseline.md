@@ -3,7 +3,7 @@ Status: Accepted
 Date: 2026-10-19
 ---
 
-# ADR-001: Start with a syncronous, navie baseline
+# ADR-001: Start with a syncronous, naive baseline
 
 ## Requirements
 
