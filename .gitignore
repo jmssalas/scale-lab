@@ -31,3 +31,6 @@ go.work.sum
 
 # Floci Data
 floci-data/
+
+# DS_Store
+.DS_Store
