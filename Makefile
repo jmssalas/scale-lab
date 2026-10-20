@@ -1,4 +1,4 @@
-.PHONY: tidy up down rate logs experiment-01
+.PHONY: tidy up down run-api
 
 tidy:
 	go mod tidy
@@ -9,3 +9,5 @@ up:
 down:
 	docker compose down -v
 
+run-api:
+	go run cmd/api/main.go
