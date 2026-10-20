@@ -3,9 +3,15 @@ services:
         image: floci/floci:latest
         ports:
             - "4566:4566"
+            - "7001:7001"
         volumes:
             # Local directory bind mount (default)
             - ./floci-data:/app/data
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            FLOCI_STORAGE_MODE: persistent
+            FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+            FLOCI_SERVICES_RDS_ENDPOINT_HOST: localhost
 
     floci-ui:
         image: floci/floci-ui:latest
