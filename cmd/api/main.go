@@ -10,10 +10,19 @@ import (
 	"time"
 
 	"github.com/jmssalas/scale-lab/internal/api"
+	"github.com/jmssalas/scale-lab/internal/db"
 )
 
 func main() {
 	addr := ":8080"
+	database, err := db.Connect(context.Background())
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close(database)
+
 	r := api.Router()
 
 	srv := &http.Server{

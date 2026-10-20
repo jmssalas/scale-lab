@@ -1,5 +1,10 @@
 .PHONY: tidy up down run-api
 
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 tidy:
 	go mod tidy
 
