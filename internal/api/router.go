@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Response struct {
@@ -31,16 +32,15 @@ func Fail(c *gin.Context, status int, code, message string) {
 	})
 }
 
-func Router() *gin.Engine {
-
+func Router(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/api/health", func(c *gin.Context) { OK(c, true) })
 
+	eventHandler := EventHandler{DB: db}
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/events", func(c *gin.Context) { OK(c, true) })
-		v1.GET("/events", func(c *gin.Context) { OK(c, true) })
+		v1.POST("/events", eventHandler.ProcessEvent)
 	}
 
 	return r

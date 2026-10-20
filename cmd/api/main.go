@@ -23,7 +23,7 @@ func main() {
 
 	defer db.Close(database)
 
-	r := api.Router()
+	r := api.Router(database)
 
 	srv := &http.Server{
 		Addr:    addr,
