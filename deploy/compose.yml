@@ -1,0 +1,45 @@
+services:
+    api:
+        build:
+            context: ..
+            args: { SERVICE: api }
+        env_file: .env
+        ports: ["8080:8080"]
+        depends_on:
+            floci: { condition: service_healthy }
+
+    floci:
+        image: floci/floci:latest
+        ports:
+            - "4566:4566"
+            - "7001:7001"
+        volumes:
+            - ./floci-data:/app/data
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            FLOCI_STORAGE_MODE: persistent
+            FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+            FLOCI_SERVICES_RDS_ENDPOINT_HOST: localhost
+
+    floci-ui:
+        image: floci/floci-ui:latest
+        ports: ["4500:4500"]
+        environment:
+            FLOCI_ENDPOINT: http://floci:4566
+        depends_on:
+            - floci
+
+    prometheus:
+        image: prom/prometheus:latest
+        ports: ["9090:9090"]
+        volumes:
+            - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+    grafana:
+        image: grafana/grafana:latest
+        environment:
+            GF_AUTH_ANONYMOUS_ENABLED: "true"
+            GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+        volumes:
+            - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+        ports: ["3000:3000"]
