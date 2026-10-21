@@ -37,9 +37,12 @@ func (p *DummyProcessor) Process(e *event.Event) error {
 
 type EventHandler struct {
 	db *gorm.DB
+	m  *Metrics
 }
 
 func (h *EventHandler) ProcessEvent(c *gin.Context) {
+	h.m.EventsRequests.Inc()
+
 	var event event.Event
 
 	if err := c.ShouldBindJSON(&event); err != nil {
