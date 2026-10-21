@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	addr := ":8080"
+	addr := os.Getenv("SERVER_ADDR")
 	database, err := db.Connect(context.Background())
 
 	if err != nil {
