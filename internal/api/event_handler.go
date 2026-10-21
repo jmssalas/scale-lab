@@ -37,11 +37,11 @@ func (p *DummyProcessor) Process(e *event.Event) error {
 
 type EventHandler struct {
 	db *gorm.DB
-	m  *Metrics
+	m  *EventMetrics
 }
 
 func (h *EventHandler) ProcessEvent(c *gin.Context) {
-	h.m.EventsRequests.Inc()
+	h.m.Requests.Inc()
 
 	var event event.Event
 

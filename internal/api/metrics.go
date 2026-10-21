@@ -5,15 +5,27 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-type Metrics struct {
-	EventsRequests prometheus.Counter
+type EventMetrics struct {
+	Requests    prometheus.Counter
+	ReqDuration prometheus.Histogram
+	DbDuration  prometheus.Histogram
 }
 
-func CreateMetrics(reg prometheus.Registerer) *Metrics {
-	m := &Metrics{
-		EventsRequests: promauto.With(reg).NewCounter(prometheus.CounterOpts{
+func CreateEventMetrics(reg prometheus.Registerer) *EventMetrics {
+	m := &EventMetrics{
+		Requests: promauto.With(reg).NewCounter(prometheus.CounterOpts{
 			Name: "api_events_requests_total",
-			Help: "HTTP requests handled",
+			Help: "HTTP requests handled.",
+		}),
+		ReqDuration: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
+			Name:    "api_events_request_duration_seconds",
+			Help:    "Total request duration.",
+			Buckets: prometheus.ExponentialBuckets(0.001, 2, 14),
+		}),
+		DbDuration: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
+			Name:    "api_events_request_db_duration_seconds",
+			Help:    "Duration of the INSERT call (includes waiting for a pool connection).",
+			Buckets: prometheus.ExponentialBuckets(0.001, 2, 14),
 		}),
 	}
 

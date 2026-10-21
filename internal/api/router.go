@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gorm.io/gorm"
 )
@@ -36,16 +37,21 @@ func Fail(c *gin.Context, status int, code, message string) {
 
 func Router(db *gorm.DB) *gin.Engine {
 	reg := prometheus.NewRegistry()
-	m := CreateMetrics(reg)
-	r := gin.Default()
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+	em := CreateEventMetrics(reg)
 
+	eh := EventHandler{db, em}
+
+	r := gin.Default()
 	r.GET("/api/health", func(c *gin.Context) { OK(c, true) })
 	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(reg, promhttp.HandlerOpts{})))
 
-	eventHandler := EventHandler{db, m}
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/events", eventHandler.ProcessEvent)
+		v1.POST("/events", eh.ProcessEvent)
 	}
 
 	return r
