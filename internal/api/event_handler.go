@@ -1,16 +1,42 @@
 package api
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	ep "github.com/jmssalas/scale-lab/internal/api/event_processors"
+	"github.com/jmssalas/scale-lab/internal/db"
 	"github.com/jmssalas/scale-lab/internal/event"
 	"gorm.io/gorm"
 )
 
+// TODO: Everything regarding EventProcessor should be refactored
+// when multiple processors will be added. Til now, it will be here for simplicity
+
+type EventProcessor interface {
+	Process(e *event.Event) error
+}
+
+type DummyProcessor struct {
+	db *gorm.DB
+}
+
+func (p *DummyProcessor) Process(e *event.Event) error {
+	ctx := context.Background()
+	event := db.Event{
+		SourceID:   e.SourceID,
+		Type:       e.Type,
+		Timestamp:  e.Timestamp,
+		Payload:    e.Payload,
+		ReceivedAt: time.Now(),
+	}
+
+	return gorm.G[db.Event](p.db).Create(ctx, &event)
+}
+
 type EventHandler struct {
-	DB *gorm.DB
+	db *gorm.DB
 }
 
 func (h *EventHandler) ProcessEvent(c *gin.Context) {
@@ -21,8 +47,7 @@ func (h *EventHandler) ProcessEvent(c *gin.Context) {
 		return
 	}
 
-	// @TODO: Select Processor by Event Type
-	var p ep.EventProcessor = &ep.DummyProcessor{DB: h.DB}
+	var p EventProcessor = &DummyProcessor{db: h.db}
 
 	if err := p.Process(&event); err != nil {
 		Fail(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())

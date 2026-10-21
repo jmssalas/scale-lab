@@ -37,7 +37,7 @@ func Router(db *gorm.DB) *gin.Engine {
 
 	r.GET("/api/health", func(c *gin.Context) { OK(c, true) })
 
-	eventHandler := EventHandler{DB: db}
+	eventHandler := EventHandler{db}
 	v1 := r.Group("/api/v1")
 	{
 		v1.POST("/events", eventHandler.ProcessEvent)
