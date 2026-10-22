@@ -14,10 +14,15 @@ Design and build an event-processing service that allows external devices or ser
 - The service should provide a endpoint as a single entry point to receive the events.
 - The service should process the events by just storing them as they arrived, keeping the received timestamp.
 - The service should be prepared to process the events according to their type.
+- There should be an external service —`load generator`— capable of simulating external devices or service requests.
+- The `load generator` service should make request according to a configurable rate.
 
 ## Non-Functional Requirements
 
 - The service should be as simple as possible.
 - The service should be the baseline for the next requirements and iterations.
 - There is no requirement regarding availability, low latency or scalability.
-- The following metrics should be available: total requests, request time and processing time.
+- The following metrics should be available from the main service:
+    - total requests, request time and processing time.
+- The following metrics should be available from the load generator service:
+    - total requests, client-side latency per request, target requests rate, dropped requests.
