@@ -25,4 +25,4 @@ Design and build an event-processing service that allows external devices or ser
 - The following metrics should be available from the main service:
     - total requests, request time and processing time.
 - The following metrics should be available from the load generator service:
-    - total requests, client-side latency per request, target requests rate, dropped requests.
+    - total requests, total dropped requests, target requests rate and client-side latency per request.

@@ -8,6 +8,15 @@ services:
         depends_on:
             floci: { condition: service_healthy }
 
+    loadgen:
+        build:
+            context: ..
+            args: { SERVICE: loadgen }
+        env_file: .env
+        ports: ["8081:8081"]
+        depends_on:
+            - api
+
     floci:
         image: floci/floci:latest
         ports:
