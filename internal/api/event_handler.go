@@ -41,6 +41,11 @@ type EventHandler struct {
 }
 
 func (h *EventHandler) ProcessEvent(c *gin.Context) {
+	start := time.Now()
+	defer func() {
+		h.m.ReqDuration.Observe(time.Since(start).Seconds())
+	}()
+
 	h.m.Requests.Inc()
 
 	var event event.Event
@@ -52,7 +57,11 @@ func (h *EventHandler) ProcessEvent(c *gin.Context) {
 
 	var p EventProcessor = &DummyProcessor{db: h.db}
 
-	if err := p.Process(&event); err != nil {
+	start = time.Now()
+	err := p.Process(&event)
+	h.m.ProcessDuration.Observe(time.Since(start).Seconds())
+
+	if err != nil {
 		Fail(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 		return
 	}

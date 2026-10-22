@@ -6,9 +6,9 @@ import (
 )
 
 type EventMetrics struct {
-	Requests    prometheus.Counter
-	ReqDuration prometheus.Histogram
-	DbDuration  prometheus.Histogram
+	Requests        prometheus.Counter
+	ReqDuration     prometheus.Histogram
+	ProcessDuration prometheus.Histogram
 }
 
 func CreateEventMetrics(reg prometheus.Registerer) *EventMetrics {
@@ -19,13 +19,13 @@ func CreateEventMetrics(reg prometheus.Registerer) *EventMetrics {
 		}),
 		ReqDuration: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
 			Name:    "api_events_request_duration_seconds",
-			Help:    "Total request duration.",
-			Buckets: prometheus.ExponentialBuckets(0.001, 2, 14),
+			Help:    "Total event request duration in seconds.",
+			Buckets: prometheus.DefBuckets,
 		}),
-		DbDuration: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
-			Name:    "api_events_request_db_duration_seconds",
-			Help:    "Duration of the INSERT call (includes waiting for a pool connection).",
-			Buckets: prometheus.ExponentialBuckets(0.001, 2, 14),
+		ProcessDuration: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
+			Name:    "api_events_processing_duration_seconds",
+			Help:    "Duration of event processing in seconds.",
+			Buckets: prometheus.DefBuckets,
 		}),
 	}
 
