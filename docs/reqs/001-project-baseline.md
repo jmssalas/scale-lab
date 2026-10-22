@@ -20,4 +20,4 @@ Design and build an event-processing service that allows external devices or ser
 - The service should be as simple as possible.
 - The service should be the baseline for the next requirements and iterations.
 - There is no requirement regarding availability, low latency or scalability.
-- The following metrics should be available: total response time, processing time, and database storage time.
+- The following metrics should be available: total requests, request time and processing time.
