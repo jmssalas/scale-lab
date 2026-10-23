@@ -27,7 +27,7 @@ func Initialize() (*gin.Engine, *Generator) {
 
 func (g *Generator) handleRate(c *gin.Context) {
 	var request struct {
-		Rate uint64 `json:"rate"`
+		Rate uint64 `json:"rate" binding:"required,gt=0"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
