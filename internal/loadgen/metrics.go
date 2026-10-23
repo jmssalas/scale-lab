@@ -23,11 +23,11 @@ func CreateGeneratorMetrics(reg prometheus.Registerer) *GeneratorMetrics {
 			Help:    "Client-side HTTP request duration in seconds.",
 			Buckets: prometheus.DefBuckets,
 		}),
-		targetRate: prometheus.NewGauge(prometheus.GaugeOpts{
+		targetRate: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
 			Name: "loadgen_target_requests_per_second",
 			Help: "Configured target request rate.",
 		}),
-		dropped: prometheus.NewCounter(prometheus.CounterOpts{
+		dropped: promauto.With(reg).NewCounter(prometheus.CounterOpts{
 			Name: "loadgen_dropped_requests_total",
 			Help: "Total scheduled requests dropped because the work queue was full.",
 		}),
