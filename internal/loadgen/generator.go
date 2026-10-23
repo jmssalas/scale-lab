@@ -85,7 +85,7 @@ func (g *Generator) Run(ctx context.Context) {
 			select {
 			case jobs <- struct{}{}:
 			default:
-				// @TODO: Increase dropped counter
+				g.metrics.dropped.Inc()
 			}
 		}
 	}
@@ -98,37 +98,28 @@ func (g *Generator) runWorker(ctx context.Context, jobs chan struct{}, id int) {
 }
 
 func (g *Generator) sendRequest(ctx context.Context, workerId int) {
-	payload, err := json.Marshal(event.Event{
+	payload, _ := json.Marshal(event.Event{
 		SourceID:  "loadgen-device-" + strconv.Itoa(workerId),
 		Type:      "telemetry",
 		Timestamp: time.Now(),
 		Payload:   json.RawMessage(`{"simulated":true}`),
 	})
-	if err != nil {
-		// @TODO: Handle error
-		slog.Error(err.Error())
-		return
-	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, g.config.targetUrl, bytes.NewReader(payload))
-	if err != nil {
-		// @TODO: Handle error
-		slog.Error(err.Error())
-		return
-	}
+	request, _ := http.NewRequestWithContext(ctx, http.MethodPost, g.config.targetUrl, bytes.NewReader(payload))
 	request.Header.Set("Content-Type", "application/json")
 
+	start := time.Now()
 	response, err := g.client.Do(request)
+	g.metrics.latency.Observe(time.Since(start).Seconds())
+
 	if err != nil {
-		// @TODO: Handle error
+		g.metrics.requests.WithLabelValues("error").Inc()
 		slog.Error(err.Error())
 		return
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		// @TODO: Handle request status
-	}
+	g.metrics.requests.WithLabelValues(strconv.Itoa(response.StatusCode)).Inc()
 }
 
 func loadConfig() *config {

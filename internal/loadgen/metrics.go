@@ -6,21 +6,21 @@ import (
 )
 
 type GeneratorMetrics struct {
-	requests    prometheus.Counter
-	requestTime prometheus.Histogram
-	targetRate  prometheus.Gauge
-	dropped     prometheus.Counter
+	requests   *prometheus.CounterVec
+	latency    prometheus.Histogram
+	targetRate prometheus.Gauge
+	dropped    prometheus.Counter
 }
 
 func CreateGeneratorMetrics(reg prometheus.Registerer) *GeneratorMetrics {
 	m := &GeneratorMetrics{
-		requests: promauto.With(reg).NewCounter(prometheus.CounterOpts{
+		requests: promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
 			Name: "loadgen_requests_total",
-			Help: "Total HTTP requests made by the load generator.",
-		}),
-		requestTime: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
-			Name:    "loadgen_request_duration_seconds",
-			Help:    "Client-side HTTP request duration in seconds.",
+			Help: "Requests sent, by HTTP status (or 'error').",
+		}, []string{"status"}),
+		latency: promauto.With(reg).NewHistogram(prometheus.HistogramOpts{
+			Name:    "loadgen_latency_seconds",
+			Help:    "Client-side latency of each requests.",
 			Buckets: prometheus.DefBuckets,
 		}),
 		targetRate: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
