@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/jmssalas/scale-lab/internal/event"
@@ -16,29 +17,42 @@ import (
 
 const (
 	DEFAULT_TARGET_URL = "http://localhost:8080/api/v1/events"
-	DEFAULT_RATE       = 5000
+	DEFAULT_RATE       = 500
 	DEFAULT_WORKERS    = 10
 	DEFAULT_QUEUE_SIZE = 100
 )
 
 type config struct {
-	targetUrl         string
-	requestsPerSecond int
-	workers           int
-	queueSize         int
+	targetUrl string
+	rate      atomic.Uint64
+	workers   int
+	queueSize int
 }
 
 type Generator struct {
-	config  *config
-	client  *http.Client
-	metrics *GeneratorMetrics
+	config      *config
+	client      *http.Client
+	metrics     *GeneratorMetrics
+	rateChanges chan struct{}
 }
 
 func CreateGenerator(m *GeneratorMetrics) *Generator {
-	return &Generator{
-		config:  loadConfig(),
-		client:  &http.Client{},
-		metrics: m,
+	g := &Generator{
+		config:      loadConfig(),
+		client:      &http.Client{},
+		metrics:     m,
+		rateChanges: make(chan struct{}, 1),
+	}
+	g.SetRate(g.config.rate.Load())
+	return g
+}
+
+func (g *Generator) SetRate(rate uint64) {
+	g.config.rate.Store(rate)
+	g.metrics.targetRate.Set(float64(rate))
+	select {
+	case g.rateChanges <- struct{}{}:
+	default:
 	}
 }
 
@@ -54,7 +68,7 @@ func (g *Generator) Run(ctx context.Context) {
 		}(workerId)
 	}
 
-	ticker := time.NewTicker(time.Second / time.Duration(g.config.requestsPerSecond))
+	ticker := time.NewTicker(time.Second / time.Duration(g.config.rate.Load()))
 	defer ticker.Stop()
 
 	slog.Info("Load generator initialized", "config", g.config)
@@ -65,6 +79,8 @@ func (g *Generator) Run(ctx context.Context) {
 			close(jobs)
 			workers.Wait()
 			return
+		case <-g.rateChanges:
+			ticker.Reset(time.Second / time.Duration(g.config.rate.Load()))
 		case <-ticker.C:
 			select {
 			case jobs <- struct{}{}:
@@ -73,7 +89,6 @@ func (g *Generator) Run(ctx context.Context) {
 			}
 		}
 	}
-
 }
 
 func (g *Generator) runWorker(ctx context.Context, jobs chan struct{}, id int) {
@@ -117,12 +132,14 @@ func (g *Generator) sendRequest(ctx context.Context, workerId int) {
 }
 
 func loadConfig() *config {
-	return &config{
-		targetUrl:         envStr("LOADGEN_TARGET_URL", DEFAULT_TARGET_URL),
-		requestsPerSecond: envInt("LOADGEN_RATE", DEFAULT_RATE),
-		workers:           envInt("LOADGEN_WORKERS", DEFAULT_WORKERS),
-		queueSize:         envInt("LOADGEN_QUEUE_SIZE", DEFAULT_QUEUE_SIZE),
+	c := &config{
+		targetUrl: envStr("LOADGEN_TARGET_URL", DEFAULT_TARGET_URL),
+		workers:   envInt("LOADGEN_WORKERS", DEFAULT_WORKERS),
+		queueSize: envInt("LOADGEN_QUEUE_SIZE", DEFAULT_QUEUE_SIZE),
 	}
+	c.rate.Store(uint64(envInt("LOADGEN_RATE", DEFAULT_RATE)))
+
+	return c
 }
 
 func envInt(k string, def int) int {

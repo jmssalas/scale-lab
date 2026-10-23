@@ -1,0 +1,6 @@
+PUT http://localhost:8081/rate
+Content-Type: application/json
+
+{
+    "rate": 500
+}
